@@ -15,7 +15,7 @@
     "generative-ai",
     "genai"
   ],
-  "version": "0.25.0",
+  "version": "0.26.0",
   "type": "commonjs",
   "repository": {
     "type": "git",
@@ -44,9 +44,9 @@
   },
   "devDependencies": {
     "jest": "^29.7.0",
+    "rimraf": "^6.0.1",
     "ts-jest": "^29.1.2",
-    "typescript": "^5.4.5",
-    "rimraf": "^6.0.1"
+    "typescript": "^5.4.5"
   },
   "main": "lib/index.js",
   "types": "lib/index.d.ts",

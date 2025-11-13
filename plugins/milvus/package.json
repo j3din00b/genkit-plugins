@@ -1,6 +1,6 @@
 {
   "name": "genkitx-milvus",
-  "version": "0.25.0",
+  "version": "0.26.0",
   "type": "commonjs",
   "description": "Genkit AI framework plugin for Milvus vector database.",
   "scripts": {
@@ -35,10 +35,10 @@
     "@zilliz/milvus2-sdk-node": "^2.4.9"
   },
   "devDependencies": {
+    "rimraf": "^6.0.1",
     "tsup": "^8.0.2",
     "tsx": "^4.7.0",
-    "typescript": "^5.6.3",
-    "rimraf": "^6.0.1"
+    "typescript": "^5.6.3"
   },
   "types": "./lib/index.d.ts",
   "exports": {
