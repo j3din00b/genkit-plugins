@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-import type { Genkit } from 'genkit';
-import { genkitPlugin } from 'genkit/plugin';
+import { genkitPluginV2, model, modelActionMetadata } from 'genkit/plugin';
 import Anthropic from '@anthropic-ai/sdk';
 
 import {
@@ -27,9 +26,13 @@ import {
   claude3Sonnet,
   claude3Haiku,
   claude35Haiku,
+  claude45Sonnet,
   claudeModel,
   SUPPORTED_CLAUDE_MODELS,
 } from './claude.js';
+import { ModelAction } from 'genkit/model';
+import { ActionType } from 'genkit/registry';
+import { ActionMetadata } from 'genkit';
 
 export {
   claude4Sonnet,
@@ -40,11 +43,32 @@ export {
   claude3Sonnet,
   claude3Haiku,
   claude35Haiku,
+  claude45Sonnet,
 };
 
 export interface PluginOptions {
   apiKey?: string;
   cacheSystemPrompt?: boolean;
+}
+
+async function list(client: Anthropic): Promise<ActionMetadata[]> {
+  const clientModels = (await client.models.list()).data;
+
+  return clientModels
+    .map((modelInfo) => {
+      // Remove the date suffix from the model id
+      const normalizedId = modelInfo.id.replace(/-\d{8}$/, '');
+      // Get the model reference from the supported models
+      const ref = SUPPORTED_CLAUDE_MODELS[normalizedId];
+      // Return the model action metadata if the model is supported
+      return ref ? modelActionMetadata({
+        name: ref.name,
+        info: ref.info,
+        configSchema: ref.configSchema,
+      }) : undefined;
+    })
+    // Filter out undefined values
+    .filter((metadata) => metadata !== undefined);
 }
 
 /**
@@ -77,23 +101,46 @@ export interface PluginOptions {
  * ```
  */
 // TODO: add support for voyage embeddings and tool use (both not documented well in docs.anthropic.com)
-export const anthropic = (options?: PluginOptions) =>
-  genkitPlugin('anthropic', async (ai: Genkit) => {
-    let apiKey = options?.apiKey || process.env.ANTHROPIC_API_KEY;
-    if (!apiKey) {
-      throw new Error(
-        'Please pass in the API key or set the ANTHROPIC_API_KEY environment variable'
-      );
-    }
-    let defaultHeaders = {};
-    if (options?.cacheSystemPrompt == true) {
-      defaultHeaders['anthropic-beta'] = 'prompt-caching-2024-07-31';
-    }
-    const client = new Anthropic({ apiKey, defaultHeaders });
+export const anthropic = (options?: PluginOptions) => {
+  let apiKey = options?.apiKey || process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) {
+    throw new Error(
+      'Please pass in the API key or set the ANTHROPIC_API_KEY environment variable'
+    );
+  }
+  let defaultHeaders = {};
+  if (options?.cacheSystemPrompt == true) {
+    defaultHeaders['anthropic-beta'] = 'prompt-caching-2024-07-31';
+  }
+  const client = new Anthropic({ apiKey, defaultHeaders });
 
-    for (const name of Object.keys(SUPPORTED_CLAUDE_MODELS)) {
-      claudeModel(ai, name, client, options?.cacheSystemPrompt);
+  let listActionsCache: ActionMetadata[] | null = null;
+
+  return genkitPluginV2({
+    name: 'anthropic',
+    init: async () => {
+      const actions: ModelAction[] = [];
+      for (const name of Object.keys(SUPPORTED_CLAUDE_MODELS)) {
+        const action = claudeModel(name, client, options?.cacheSystemPrompt);
+        actions.push(action);
+      }
+      return actions;
+    },
+    resolve: (actionType: ActionType, name: string) => {
+      if (actionType === 'model') {
+        return claudeModel(
+          name,
+          client
+        );
+      }
+      return undefined;
+    },
+    list: async () => {
+      if (listActionsCache) return listActionsCache;
+      listActionsCache = await list(client);
+      return listActionsCache;
     }
   });
+};
 
 export default anthropic;

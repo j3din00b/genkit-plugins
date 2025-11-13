@@ -22,7 +22,6 @@ import type {
   Part,
   Role,
   StreamingCallback,
-  Genkit,
   ModelReference,
 } from 'genkit';
 import { GenerationCommonConfigSchema } from 'genkit';
@@ -47,6 +46,7 @@ import type {
   MessageStreamEvent,
   ToolUseBlockParam,
 } from '@anthropic-ai/sdk/resources/messages.mjs';
+import { model } from 'genkit/plugin';
 
 export const AnthropicConfigSchema = GenerationCommonConfigSchema.extend({
   tool_choice: z
@@ -71,7 +71,8 @@ export const AnthropicConfigSchema = GenerationCommonConfigSchema.extend({
 });
 
 export const claude4Sonnet = modelRef({
-  name: 'anthropic/claude-4-sonnet',
+  name: 'claude-4-sonnet',
+  namespace: 'anthropic',
   info: {
     versions: ['claude-sonnet-4-20250514'],
     label: 'Anthropic - Claude 4 Sonnet',
@@ -88,7 +89,8 @@ export const claude4Sonnet = modelRef({
 });
 
 export const claude37Sonnet = modelRef({
-  name: 'anthropic/claude-3-7-sonnet',
+  name: 'claude-3-7-sonnet',
+  namespace: 'anthropic',
   info: {
     versions: ['claude-3-7-sonnet-20250219', 'claude-3-7-sonnet-latest'],
     label: 'Anthropic - Claude 3.7 Sonnet',
@@ -105,7 +107,8 @@ export const claude37Sonnet = modelRef({
 });
 
 export const claude35Sonnet = modelRef({
-  name: 'anthropic/claude-3-5-sonnet',
+  name: 'claude-3-5-sonnet',
+  namespace: 'anthropic',
   info: {
     versions: [
       'claude-3-5-sonnet-20240620',
@@ -126,7 +129,8 @@ export const claude35Sonnet = modelRef({
 });
 
 export const claude3Opus = modelRef({
-  name: 'anthropic/claude-3-opus',
+  name: 'claude-3-opus',
+  namespace: 'anthropic',
   info: {
     versions: ['claude-3-opus-20240229'],
     label: 'Anthropic - Claude 3 Opus',
@@ -143,7 +147,8 @@ export const claude3Opus = modelRef({
 });
 
 export const claude3Sonnet = modelRef({
-  name: 'anthropic/claude-3-sonnet',
+  name: 'claude-3-sonnet',
+  namespace: 'anthropic',
   info: {
     versions: ['claude-3-sonnet-20240229'],
     label: 'Anthropic - Claude 3 Sonnet',
@@ -160,7 +165,8 @@ export const claude3Sonnet = modelRef({
 });
 
 export const claude3Haiku = modelRef({
-  name: 'anthropic/claude-3-haiku',
+  name: 'claude-3-haiku',
+  namespace: 'anthropic',
   info: {
     versions: ['claude-3-haiku-20240307'],
     label: 'Anthropic - Claude 3 Haiku',
@@ -177,7 +183,8 @@ export const claude3Haiku = modelRef({
 });
 
 export const claude4Opus = modelRef({
-  name: 'anthropic/claude-4-opus',
+  name: 'claude-4-opus',
+  namespace: 'anthropic',
   info: {
     versions: ['claude-opus-4-20250514'],
     label: 'Anthropic - Claude 4 Opus',
@@ -194,7 +201,8 @@ export const claude4Opus = modelRef({
 });
 
 export const claude35Haiku = modelRef({
-  name: 'anthropic/claude-3-5-haiku',
+  name: 'claude-3-5-haiku',
+  namespace: 'anthropic',
   info: {
     versions: ['claude-3-5-haiku-20241022', 'claude-3-5-haiku-latest'],
     label: 'Anthropic - Claude 3.5 Haiku',
@@ -210,6 +218,24 @@ export const claude35Haiku = modelRef({
   version: 'claude-3-5-haiku-latest',
 });
 
+export const claude45Sonnet = modelRef({
+  name: 'claude-4-5-sonnet',
+  namespace: 'anthropic',
+  info: {
+    versions: ['claude-sonnet-4-5-20250929'],
+    label: 'Anthropic - Claude 4.5 Sonnet',
+    supports: {
+      multiturn: true,
+      tools: true,
+      media: true,
+      systemRole: true,
+      output: ['text'],
+    },
+  },
+  configSchema: AnthropicConfigSchema,
+  version: 'claude-sonnet-4-5-20250929',
+});
+
 export const SUPPORTED_CLAUDE_MODELS: Record<
   string,
   ModelReference<typeof AnthropicConfigSchema>
@@ -222,6 +248,7 @@ export const SUPPORTED_CLAUDE_MODELS: Record<
   'claude-3-5-haiku': claude35Haiku,
   'claude-4-sonnet': claude4Sonnet,
   'claude-4-opus': claude4Opus,
+  'claude-4-5-sonnet': claude45Sonnet,
 };
 
 /**
@@ -612,21 +639,18 @@ export function claudeRunner(
  * Defines a Claude model with the given name and Anthropic client.
  */
 export function claudeModel(
-  ai: Genkit,
   name: string,
   client: Anthropic,
   cacheSystemPrompt?: boolean
 ): ModelAction<typeof AnthropicConfigSchema> {
-  const modelId = `anthropic/${name}`;
-  const model = SUPPORTED_CLAUDE_MODELS[name];
-  if (!model) throw new Error(`Unsupported model: ${name}`);
+  const modelRef = SUPPORTED_CLAUDE_MODELS[name];
+  if (!modelRef) throw new Error(`Unsupported model: ${name}`);
 
-  return ai.defineModel(
+  return model(
     {
-      apiVersion: 'v2',
-      name: modelId,
-      ...model.info,
-      configSchema: model.configSchema,
+      name: `anthropic/${name}`,
+      ...modelRef.info,
+      configSchema: modelRef.configSchema,
     },
     claudeRunner(name, client, cacheSystemPrompt)
   );
