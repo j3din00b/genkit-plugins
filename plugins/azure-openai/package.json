@@ -1,6 +1,7 @@
 {
   "name": "genkitx-azure-openai",
   "description": "Firebase Genkit AI framework plugin for Azure OpenAI APIs.",
+  "private": true,
   "keywords": [
     "genkit",
     "genkit-plugin",

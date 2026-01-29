@@ -22,6 +22,11 @@
 
 </br>
 
+> [!WARNING]  
+> **This plugin has been merged into the core Genkit distribution.** Please use the official Azure Openai plugin instead:
+>
+> - **The code is located here**: https://github.com/genkit-ai/azure-foundry-js-plugin
+
 **`genkitx-azure-openai`** is a community plugin for using Azure OpenAI APIs with
 [Firebase Genkit](https://github.com/firebase/genkit). Built by [**Bloom Labs Inc**](https://github.com/BloomLabsInc). 🔥
 

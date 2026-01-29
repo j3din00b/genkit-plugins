@@ -1,6 +1,7 @@
 {
   "name": "genkitx-anthropic",
   "description": "Firebase Genkit AI framework plugin for Anthropic APIs.",
+  "private": true,
   "keywords": [
     "genkit",
     "genkit-plugin",
