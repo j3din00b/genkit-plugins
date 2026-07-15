@@ -1,6 +1,6 @@
 {
   "name": "genkitx-groq-example",
-  "version": "0.30.0",
+  "version": "0.31.0",
   "description": "",
   "main": "lib/index.js",
   "private": true,
